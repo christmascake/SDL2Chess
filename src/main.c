@@ -10,6 +10,12 @@ int main(int argc, char *argv[]) {
 
   while (engine.is_engine_running) {
     pollEvents(&engine);  // poll events at the start of every frame
+
+    update(&engine);
+
+    renderFrame(&engine);
+
+    delay(&engine);
   }
 
   destroyEngine(&engine);

@@ -24,7 +24,7 @@ void pollEvents(struct Engine* engine) {
         break;
       case SDL_WINDOWEVENT_CLOSE:
       case SDL_QUIT:
-        engine->is_engine_running = 0;
+        closeEngine(engine);
         break;
       default:
         break;

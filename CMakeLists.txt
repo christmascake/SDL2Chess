@@ -15,6 +15,7 @@ target_sources(SDL2Chess PRIVATE
   ${CMAKE_SOURCE_DIR}/src/events.c
   ${CMAKE_SOURCE_DIR}/src/keyboard.c
   ${CMAKE_SOURCE_DIR}/src/render.c
+  ${CMAKE_SOURCE_DIR}/src/update.c
 )
 
 target_include_directories(SDL2Chess PRIVATE
