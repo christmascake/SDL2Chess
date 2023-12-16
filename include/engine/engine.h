@@ -1,13 +1,20 @@
-#ifndef SDL2CHESS_INCLUDE_ENGINE_H_
-#define SDL2CHESS_INCLUDE_ENGINE_H_
+#ifndef SDL2CHESS_INCLUDE_ENGINE_ENGINE_H_
+#define SDL2CHESS_INCLUDE_ENGINE_ENGINE_H_
 
 #include <SDL2/SDL.h>
 
+#include "chess.h"
+
 struct Engine {
+  struct Chess game;
+
   SDL_Window* window;
   SDL_Renderer* renderer;
 
   SDL_Texture* pieces;
+  SDL_Texture* board;
+
+  SDL_Surface* t_surf;
 
   // 'sfml sprites'
   SDL_Rect white_king;
@@ -33,6 +40,9 @@ struct Engine {
   int last_frame_time;
   float delta_time;
 };
+
+// createEngine()?
+// const members?
 
 int initEngine(struct Engine* engine);
 void destroyEngine(struct Engine* engine);

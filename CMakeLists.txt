@@ -11,16 +11,21 @@ find_package(SDL2 REQUIRED)
 
 target_sources(SDL2Chess PRIVATE
   ${CMAKE_SOURCE_DIR}/src/main.c
-  ${CMAKE_SOURCE_DIR}/src/engine.c
-  ${CMAKE_SOURCE_DIR}/src/events.c
-  ${CMAKE_SOURCE_DIR}/src/keyboard.c
-  ${CMAKE_SOURCE_DIR}/src/render.c
-  ${CMAKE_SOURCE_DIR}/src/update.c
+  ${CMAKE_SOURCE_DIR}/src/game/chess.c
+  ${CMAKE_SOURCE_DIR}/src/game/piece.c
+  ${CMAKE_SOURCE_DIR}/src/engine/engine.c
+  ${CMAKE_SOURCE_DIR}/src/engine/events.c
+  ${CMAKE_SOURCE_DIR}/src/engine/keyboard.c
+  ${CMAKE_SOURCE_DIR}/src/engine/render.c
+  ${CMAKE_SOURCE_DIR}/src/engine/update.c
 )
 
 target_include_directories(SDL2Chess PRIVATE
   ${SDL2_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include/engine
+  ${CMAKE_SOURCE_DIR}/include/assets
+  ${CMAKE_SOURCE_DIR}/include/game
 )
 
 target_link_libraries(SDL2Chess PRIVATE

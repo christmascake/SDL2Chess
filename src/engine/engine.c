@@ -7,13 +7,25 @@
 
 // PRIVATE
 
-void handleError(const char* msg) {
-  char errbuf[100] = {'\0'};
-  strcat(errbuf, msg);
-  strcat(errbuf, ", SDL_GetError(): ");
-  strcat(errbuf, SDL_GetError());
-  fprintf(stderr, errbuf);
-}
+void handleError(const char* msg) { SDL_Log(msg, SDL_GetError()); }
+
+// this does not work IDK why
+// void loadTextureFromArray(struct Engine* engine, SDL_Texture* texture,
+//                          const void* arr, const int width, const int height,
+//                          SDL_Renderer* renderer) {
+//  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32,
+//                              SDL_TEXTUREACCESS_STREAMING, width, height);
+//  // update texture with new data
+//  int texture_pitch = 0;
+//  void* texture_pixels = NULL;
+//  if (SDL_LockTexture(texture, NULL, &texture_pixels, &texture_pitch) != 0) {
+//    handleError("Unable to load texture from array.");
+//  } else {
+//    memcpy(texture_pixels, arr, texture_pitch * height);
+//  }
+//  SDL_UnlockTexture(texture);
+//  SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+//}
 
 void loadTextures(struct Engine* engine) {
   engine->pieces = SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA32,
@@ -30,6 +42,18 @@ void loadTextures(struct Engine* engine) {
   }
   SDL_UnlockTexture(engine->pieces);
   SDL_SetTextureBlendMode(engine->pieces, SDL_BLENDMODE_BLEND);
+
+  // create the board
+  engine->t_surf = SDL_CreateRGBSurface(0, 128, 128, 32, 0, 0, 0, 0);
+  SDL_Rect foo = {0, 0, 128, 128};
+  SDL_PixelFormat* bar = engine->t_surf->format;
+  if (SDL_FillRect(engine->t_surf, &foo, SDL_MapRGBA(bar, 255, 0, 0, 255)) <
+      0) {
+    handleError("bad rect");
+  }
+
+  engine->board =
+      SDL_CreateTextureFromSurface(engine->renderer, engine->t_surf);
 }
 
 void initRects(struct Engine* engine) {
@@ -41,14 +65,16 @@ void initRects(struct Engine* engine) {
           128;
 
   engine->white_king.w = engine->white_queen.w = engine->white_bishop.w =
-      engine->white_knight.w = engine->white_rook.w = engine->white_pawn.w = 0;
+      engine->white_knight.w = engine->white_rook.w = engine->white_pawn.w =
+          128;
 
   engine->black_king.w = engine->black_queen.w = engine->black_bishop.w =
       engine->black_knight.w = engine->black_rook.w = engine->black_pawn.w =
           128;
 
   engine->white_king.h = engine->white_queen.h = engine->white_bishop.h =
-      engine->white_knight.h = engine->white_rook.h = engine->white_pawn.h = 0;
+      engine->white_knight.h = engine->white_rook.h = engine->white_pawn.h =
+          128;
 
   engine->black_king.h = engine->black_queen.h = engine->black_bishop.h =
       engine->black_knight.h = engine->black_rook.h = engine->black_pawn.h =
@@ -65,6 +91,8 @@ void initRects(struct Engine* engine) {
 // PUBLIC
 
 int initEngine(struct Engine* engine) {
+  chessSetStartingPosition(&engine->game);
+
   // setup sdl
   if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
     handleError("Failed to init SDL");
