@@ -14,22 +14,10 @@ struct Engine {
   SDL_Texture* pieces;
   SDL_Texture* board;
 
-  SDL_Surface* t_surf;
+  SDL_Texture* position_sticky;
+  SDL_Texture* held_piece_texture;
 
-  // 'sfml sprites'
-  SDL_Rect white_king;
-  SDL_Rect white_queen;
-  SDL_Rect white_bishop;
-  SDL_Rect white_knight;
-  SDL_Rect white_rook;
-  SDL_Rect white_pawn;
-
-  SDL_Rect black_king;
-  SDL_Rect black_queen;
-  SDL_Rect black_bishop;
-  SDL_Rect black_knight;
-  SDL_Rect black_rook;
-  SDL_Rect black_pawn;
+  SDL_Point held_piece;
 
   int is_engine_running;
   int is_window_fullscreen;
@@ -48,6 +36,11 @@ int initEngine(struct Engine* engine);
 void destroyEngine(struct Engine* engine);
 
 void delay(struct Engine* engine);
+
+void updatePositionTexture(struct Engine* engine);
+void updateHeldPieceTexture(struct Engine* engine);
+
+int isHoldingPiece(struct Engine* engine);
 
 void closeEngine(struct Engine* engine);
 

@@ -4,6 +4,8 @@
 #include "chess.h"
 #include "engine.h"
 #include "events.h"
+#include "keyboard.h"
+#include "mouse.h"
 #include "piece.h"
 #include "render.h"
 #include "update.h"

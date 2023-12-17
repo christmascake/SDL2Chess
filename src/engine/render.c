@@ -9,19 +9,20 @@ void renderFrame(struct Engine* engine) {
   SDL_SetRenderDrawColor(engine->renderer, 0, 55, 0, 255);
   SDL_RenderClear(engine->renderer);
 
-  // temp board drawing
-  for (size_t i = 0; i < BOARD_HEIGHT; i++) {
-    for (size_t j = 0; j < BOARD_WIDTH; j++) {
-      // calc piece to draw
-      SDL_Rect t = {0, 0, 128, 128};
-      SDL_Rect pos = {j * 128, i * 128, 128, 128};
-      t.x = 128 * (int)(engine->game.board[i][j].type);
-      t.y = 128 * (int)(engine->game.board[i][j].side);
+  // draw the current position
+  SDL_Rect board_pos = {0, 0, 1024, 1024};
+  SDL_RenderCopy(engine->renderer, engine->position_sticky, NULL, &board_pos);
 
-      SDL_RenderCopy(engine->renderer, engine->pieces, &t, &pos);
-    }
+  // render held piece
+  if (isHoldingPiece(engine)) {
+    SDL_Rect mouse_pos = {0, 0, 128, 128};
+    SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
+    mouse_pos.x -= 64;
+    mouse_pos.y -= 64;
+
+    SDL_RenderCopy(engine->renderer, engine->held_piece_texture, NULL,
+                   &mouse_pos);
   }
-
   // display the frame
   SDL_RenderPresent(engine->renderer);
 }
