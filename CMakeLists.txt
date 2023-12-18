@@ -14,6 +14,7 @@ target_sources(SDL2Chess PRIVATE
   ${CMAKE_SOURCE_DIR}/src/game/chess.c
   ${CMAKE_SOURCE_DIR}/src/game/piece.c
   ${CMAKE_SOURCE_DIR}/src/game/pawn.c
+  ${CMAKE_SOURCE_DIR}/src/game/knight.c
   ${CMAKE_SOURCE_DIR}/src/engine/engine.c
   ${CMAKE_SOURCE_DIR}/src/engine/events.c
   ${CMAKE_SOURCE_DIR}/src/engine/keyboard.c

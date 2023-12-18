@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+#include "knight.h"
 #include "pawn.h"
 
 // PRIVATE
@@ -75,6 +76,9 @@ void calculateValidMoves(struct Chess* chess) {
       switch (chess->board[i][j].type) {
         case Pawn:
           calculatePawnMoves(chess, pos);
+          break;
+        case Knight:
+          calculateKnightMoves(chess, pos);
           break;
         default:
           break;

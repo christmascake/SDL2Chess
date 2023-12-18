@@ -14,7 +14,9 @@ struct Engine {
   SDL_Texture* pieces_texture;
   SDL_Texture* board_texture;
   SDL_Texture* position_texture;
+  SDL_Texture* attacked_texture;
   SDL_Texture* held_piece_texture;
+  SDL_Texture* target_texture;
 
   struct Cord held_piece_point;
 
@@ -38,6 +40,7 @@ void delay(struct Engine* engine);
 
 void updatePositionTexture(struct Engine* engine);
 void updateHeldPieceTexture(struct Engine* engine);
+void updateAttackedTexture(struct Engine* engine);
 
 int isHoldingPiece(struct Engine* engine);
 

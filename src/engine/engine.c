@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "chess_pieces.h"
+#include "chess_target.h"
 
 // PRIVATE
 
@@ -50,6 +51,23 @@ void loadTextures(struct Engine* engine) {
   SDL_UnlockTexture(engine->pieces_texture);
   SDL_SetTextureBlendMode(engine->pieces_texture, SDL_BLENDMODE_BLEND);
 
+  // create the target texture
+  engine->target_texture = SDL_CreateTexture(
+      engine->renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+      CHESS_TARGET_WIDTH, CHESS_TARGET_HEIGHT);
+
+  int target_texture_pitch = 0;
+  void* target_texture_pixels = NULL;
+  if (SDL_LockTexture(engine->target_texture, NULL, &target_texture_pixels,
+                      &target_texture_pitch) != 0) {
+    SDL_Log("Unable to lock texture: %s", SDL_GetError());
+  } else {
+    memcpy(target_texture_pixels, chess_target,
+           target_texture_pitch * CHESS_TARGET_HEIGHT);
+  }
+  SDL_UnlockTexture(engine->target_texture);
+  SDL_SetTextureBlendMode(engine->target_texture, SDL_BLENDMODE_BLEND);
+
   // create the board
   engine->board_texture =
       SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA32,
@@ -61,6 +79,12 @@ void loadTextures(struct Engine* engine) {
       SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA32,
                         SDL_TEXTUREACCESS_TARGET, 1024, 1024);
   SDL_SetTextureBlendMode(engine->position_texture, SDL_BLENDMODE_BLEND);
+
+  // create the attacked targets texture
+  engine->attacked_texture =
+      SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA32,
+                        SDL_TEXTUREACCESS_TARGET, 1024, 1024);
+  SDL_SetTextureBlendMode(engine->attacked_texture, SDL_BLENDMODE_BLEND);
 
   // create the held piece
   engine->held_piece_texture =
@@ -193,6 +217,35 @@ void updateHeldPieceTexture(struct Engine* engine) {
                   .board[engine->held_piece_point.y][engine->held_piece_point.x]
                   .side);
     SDL_RenderCopy(engine->renderer, engine->pieces_texture, &t, &pos);
+  }
+
+  SDL_RenderPresent(engine->renderer);
+  SDL_SetRenderTarget(engine->renderer, NULL);
+}
+
+void updateAttackedTexture(struct Engine* engine) {
+  SDL_SetRenderTarget(engine->renderer, engine->attacked_texture);
+  SDL_SetRenderDrawColor(engine->renderer, 0, 0, 0, 0);
+  SDL_RenderClear(engine->renderer);
+
+  SDL_SetTextureAlphaMod(engine->target_texture, 127);
+
+  for (size_t i = 0; i < 8; i++) {
+    for (size_t j = 0; j < 8; j++) {
+      SDL_Rect pos = {j * 128, i * 128, 128, 128};
+      if (engine->game
+              .board[engine->held_piece_point.y][engine->held_piece_point.x]
+              .valid_attacks[i][j]) {
+        SDL_SetTextureColorMod(engine->target_texture, 255, 0, 0);
+        SDL_RenderCopy(engine->renderer, engine->target_texture, NULL, &pos);
+      } else if (engine->game
+                     .board[engine->held_piece_point.y]
+                           [engine->held_piece_point.x]
+                     .valid_moves[i][j]) {
+        SDL_SetTextureColorMod(engine->target_texture, 0, 255, 0);
+        SDL_RenderCopy(engine->renderer, engine->target_texture, NULL, &pos);
+      }
+    }
   }
 
   SDL_RenderPresent(engine->renderer);

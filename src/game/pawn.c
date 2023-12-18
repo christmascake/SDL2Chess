@@ -2,9 +2,8 @@
 
 // PRIVATE
 
-void checkMovement(struct Chess* chess, const struct Cord pos,
-                   const int offset) {
-  // convenience
+static void checkMovement(struct Chess* chess, const struct Cord pos,
+                          const int offset) {
   int(*valid_moves)[8] = chess->board[pos.y][pos.x].valid_moves;
 
   const struct Cord forward = {pos.x, pos.y + offset};
@@ -14,10 +13,13 @@ void checkMovement(struct Chess* chess, const struct Cord pos,
     valid_moves[forward.y][forward.x] = 1;
 
     // check 2nd/7th rank special move
-    if (pos.y == 1 | pos.y == 6) {
-      const struct Cord forward2 = {pos.x, pos.y + (offset * 2)};
-
-      // the 2 spaces ahead of this pawn are empty
+    // TODO: aint no way this is good code
+    const struct Cord forward2 = {pos.x, pos.y + (offset * 2)};
+    if (pos.y == 6 && offset == -1) {
+      if (chess->board[forward2.y][forward2.x].type == Empty) {
+        valid_moves[forward2.y][forward2.x] = 1;
+      }
+    } else if (pos.y == 1 && offset) {
       if (chess->board[forward2.y][forward2.x].type == Empty) {
         valid_moves[forward2.y][forward2.x] = 1;
       }
@@ -25,8 +27,8 @@ void checkMovement(struct Chess* chess, const struct Cord pos,
   }
 }
 
-void checkAttack(struct Chess* chess, const struct Cord pos, const int offset) {
-  // convenience
+static void checkAttack(struct Chess* chess, const struct Cord pos,
+                        const int offset) {
   int(*valid_attacks)[8] = chess->board[pos.y][pos.x].valid_attacks;
   int* valid = valid_attacks[pos.y + offset];
 
@@ -35,7 +37,7 @@ void checkAttack(struct Chess* chess, const struct Cord pos, const int offset) {
 
   const struct Piece* board = chess->board[pos.y + offset];
 
-  const int my_side = (chess->board[pos.y][pos.x].side == White) ? 0 : 1;
+  const enum Side my_side = chess->board[pos.y][pos.x].side;
 
   switch (pos.x) {
     case 0:

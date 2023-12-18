@@ -13,6 +13,7 @@ void handleMousePressed(struct Engine* engine, const SDL_Event ev) {
 
       updatePositionTexture(engine);
       updateHeldPieceTexture(engine);
+      updateAttackedTexture(engine);
     }
   }
 }
@@ -28,7 +29,8 @@ void handleMouseReleased(struct Engine* engine, const SDL_Event ev) {
 
     struct Cord placed = {ev.button.x / 128, ev.button.y / 128};
 
-    if (ev.button.x > -1 && ev.button.y > -1 && ev.button.x <1025 && ev.button.y < 1025) {
+    if (ev.button.x > -1 && ev.button.y > -1 && ev.button.x < 1025 &&
+        ev.button.y < 1025) {
       if (isValidMove(&engine->game, engine->held_piece_point, placed)) {
         placePiece(&engine->game, held, placed);
         removePiece(&engine->game, engine->held_piece_point);

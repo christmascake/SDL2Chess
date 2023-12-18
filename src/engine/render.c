@@ -25,6 +25,7 @@ void renderFrame(struct Engine* engine) {
 
     SDL_RenderCopy(engine->renderer, engine->held_piece_texture, NULL,
                    &mouse_pos);
+    SDL_RenderCopy(engine->renderer, engine->attacked_texture, NULL, NULL);
   }
   // display the frame
   SDL_RenderPresent(engine->renderer);
