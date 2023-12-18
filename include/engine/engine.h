@@ -11,13 +11,12 @@ struct Engine {
   SDL_Window* window;
   SDL_Renderer* renderer;
 
-  SDL_Texture* pieces;
-  SDL_Texture* board;
-
-  SDL_Texture* position_sticky;
+  SDL_Texture* pieces_texture;
+  SDL_Texture* board_texture;
+  SDL_Texture* position_texture;
   SDL_Texture* held_piece_texture;
 
-  SDL_Point held_piece;
+  struct Cord held_piece_point;
 
   int is_engine_running;
   int is_window_fullscreen;

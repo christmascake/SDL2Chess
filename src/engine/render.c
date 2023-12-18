@@ -9,9 +9,12 @@ void renderFrame(struct Engine* engine) {
   SDL_SetRenderDrawColor(engine->renderer, 0, 55, 0, 255);
   SDL_RenderClear(engine->renderer);
 
-  // draw the current position
+  // draw the board
   SDL_Rect board_pos = {0, 0, 1024, 1024};
-  SDL_RenderCopy(engine->renderer, engine->position_sticky, NULL, &board_pos);
+  SDL_RenderCopy(engine->renderer, engine->board_texture, NULL, &board_pos);
+
+  // draw the current position
+  SDL_RenderCopy(engine->renderer, engine->position_texture, NULL, &board_pos);
 
   // render held piece
   if (isHoldingPiece(engine)) {

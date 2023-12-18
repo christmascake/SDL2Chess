@@ -11,11 +11,11 @@ int main(int argc, char *argv[]) {
   while (engine.is_engine_running) {
     pollEvents(&engine);  // poll events at the start of every frame
 
-    update(&engine);
+    update(&engine);  // calculate delta_time
 
-    renderFrame(&engine);
+    renderFrame(&engine);  // draw the current frame
 
-    delay(&engine);
+    delay(&engine);  // handle locking fps
   }
 
   destroyEngine(&engine);

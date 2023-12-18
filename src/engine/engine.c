@@ -9,27 +9,58 @@
 
 void handleError(const char* msg) { SDL_Log(msg, SDL_GetError()); }
 
+void createBoardTexture(struct Engine* engine) {
+  SDL_SetRenderTarget(engine->renderer, engine->board_texture);
+  SDL_SetRenderDrawColor(engine->renderer, 0, 0, 0, 0);
+  SDL_RenderClear(engine->renderer);
+
+  int alternate = 0;
+  for (size_t i = 0; i < 8; i++) {
+    int is_black = alternate;
+    for (size_t j = 0; j < 8; j++) {
+      SDL_Rect tile = {j * 128, i * 128, 128, 128};
+      SDL_Color white = {240, 217, 183, 255};
+      SDL_Color black = {180, 136, 102, 255};
+      SDL_Color draw_color = (is_black) ? black : white;
+      SDL_SetRenderDrawColor(engine->renderer, draw_color.r, draw_color.g,
+                             draw_color.b, draw_color.a);
+      SDL_RenderFillRect(engine->renderer, &tile);
+      is_black = !is_black;
+    }
+    alternate = !alternate;
+  }
+
+  SDL_RenderPresent(engine->renderer);
+  SDL_SetRenderTarget(engine->renderer, NULL);
+}
+
 void loadTextures(struct Engine* engine) {
-  engine->pieces = SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA32,
-                                     SDL_TEXTUREACCESS_STREAMING,
-                                     CHESS_PIECES_WIDTH, CHESS_PIECES_HEIGHT);
+  engine->pieces_texture = SDL_CreateTexture(
+      engine->renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
+      CHESS_PIECES_WIDTH, CHESS_PIECES_HEIGHT);
   // update texture with new data
   int texture_pitch = 0;
   void* texture_pixels = NULL;
-  if (SDL_LockTexture(engine->pieces, NULL, &texture_pixels, &texture_pitch) !=
-      0) {
+  if (SDL_LockTexture(engine->pieces_texture, NULL, &texture_pixels,
+                      &texture_pitch) != 0) {
     SDL_Log("Unable to lock texture: %s", SDL_GetError());
   } else {
     memcpy(texture_pixels, chess_pieces, texture_pitch * CHESS_PIECES_HEIGHT);
   }
-  SDL_UnlockTexture(engine->pieces);
-  SDL_SetTextureBlendMode(engine->pieces, SDL_BLENDMODE_BLEND);
+  SDL_UnlockTexture(engine->pieces_texture);
+  SDL_SetTextureBlendMode(engine->pieces_texture, SDL_BLENDMODE_BLEND);
 
-  // create the sticky position
-  engine->position_sticky =
+  // create the board
+  engine->board_texture =
       SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA32,
                         SDL_TEXTUREACCESS_TARGET, 1024, 1024);
-  SDL_SetTextureBlendMode(engine->position_sticky, SDL_BLENDMODE_BLEND);
+  SDL_SetTextureBlendMode(engine->board_texture, SDL_BLENDMODE_BLEND);
+
+  // create the sticky position
+  engine->position_texture =
+      SDL_CreateTexture(engine->renderer, SDL_PIXELFORMAT_RGBA32,
+                        SDL_TEXTUREACCESS_TARGET, 1024, 1024);
+  SDL_SetTextureBlendMode(engine->position_texture, SDL_BLENDMODE_BLEND);
 
   // create the held piece
   engine->held_piece_texture =
@@ -50,9 +81,9 @@ int initEngine(struct Engine* engine) {
   }
 
   // create window
-  engine->window = SDL_CreateWindow("SDL2 Chess", SDL_WINDOWPOS_CENTERED,
-                                    SDL_WINDOWPOS_CENTERED, 1024, 1024,
-                                    SDL_WINDOW_RESIZABLE);
+  engine->window =
+      SDL_CreateWindow("SDL2 Chess", SDL_WINDOWPOS_CENTERED,
+                       SDL_WINDOWPOS_CENTERED, 1024, 1024, SDL_WINDOW_SHOWN);
   if (!engine->window) {
     handleError("Failed to create window");
     return 0;
@@ -68,10 +99,12 @@ int initEngine(struct Engine* engine) {
   }
 
   loadTextures(engine);
+  createBoardTexture(engine);
   updatePositionTexture(engine);
+  calculateValidMoves(&engine->game);
 
-  engine->held_piece.x = -1;
-  engine->held_piece.y = -1;
+  engine->held_piece_point.x = -1;
+  engine->held_piece_point.y = -1;
 
   engine->is_window_fullscreen = 0;
 
@@ -88,7 +121,10 @@ int initEngine(struct Engine* engine) {
 
 void destroyEngine(struct Engine* engine) {
   // destroy in reverse order
-  SDL_DestroyTexture(engine->pieces);
+  SDL_DestroyTexture(engine->held_piece_texture);
+  SDL_DestroyTexture(engine->position_texture);
+  SDL_DestroyTexture(engine->board_texture);
+  SDL_DestroyTexture(engine->pieces_texture);
   SDL_DestroyRenderer(engine->renderer);
   SDL_DestroyWindow(engine->window);
   SDL_Quit();
@@ -103,14 +139,15 @@ void delay(struct Engine* engine) {
 
 void updatePositionTexture(struct Engine* engine) {
   // enable rendering to texture
-  SDL_SetRenderTarget(engine->renderer, engine->position_sticky);
+  SDL_SetRenderTarget(engine->renderer, engine->position_texture);
   SDL_SetRenderDrawColor(engine->renderer, 0, 0, 0, 0);
   SDL_RenderClear(engine->renderer);
 
   for (size_t i = 0; i < BOARD_HEIGHT; i++) {
     for (size_t j = 0; j < BOARD_WIDTH; j++) {
       // don't render a held piece
-      if (engine->held_piece.y == i && engine->held_piece.x == j) continue;
+      if (engine->held_piece_point.y == i && engine->held_piece_point.x == j)
+        continue;
 
       // calc piece to draw
       SDL_Rect t = {0, 0, 128, 128};
@@ -121,7 +158,7 @@ void updatePositionTexture(struct Engine* engine) {
       t.x = 128 * (int)(engine->game.board[i][j].type);
       t.y = 128 * (int)(engine->game.board[i][j].side);
 
-      SDL_RenderCopy(engine->renderer, engine->pieces, &t, &pos);
+      SDL_RenderCopy(engine->renderer, engine->pieces_texture, &t, &pos);
     }
   }
 
@@ -138,19 +175,24 @@ void updateHeldPieceTexture(struct Engine* engine) {
   SDL_RenderClear(engine->renderer);
 
   // if user isn't holding piece just draw something out of bounds
-  if (engine->held_piece.x == -1 && engine->held_piece.y == -1) {
+  if (engine->held_piece_point.x == -1 && engine->held_piece_point.y == -1) {
     SDL_Rect nothing = {0, 0, 0, 0};
-    SDL_RenderCopy(engine->renderer, engine->pieces, &nothing, &nothing);
+    SDL_RenderCopy(engine->renderer, engine->pieces_texture, &nothing,
+                   &nothing);
   } else {
     SDL_Rect t = {0, 0, 128, 128};
     SDL_Rect pos = {0, 0, 128, 128};
-    t.x = 128 *
-          (int)(engine->game.board[engine->held_piece.y][engine->held_piece.x]
-                    .type);
-    t.y = 128 *
-          (int)(engine->game.board[engine->held_piece.y][engine->held_piece.x]
-                    .side);
-    SDL_RenderCopy(engine->renderer, engine->pieces, &t, &pos);
+    t.x =
+        128 *
+        (int)(engine->game
+                  .board[engine->held_piece_point.y][engine->held_piece_point.x]
+                  .type);
+    t.y =
+        128 *
+        (int)(engine->game
+                  .board[engine->held_piece_point.y][engine->held_piece_point.x]
+                  .side);
+    SDL_RenderCopy(engine->renderer, engine->pieces_texture, &t, &pos);
   }
 
   SDL_RenderPresent(engine->renderer);
@@ -158,7 +200,7 @@ void updateHeldPieceTexture(struct Engine* engine) {
 }
 
 int isHoldingPiece(struct Engine* engine) {
-  return (engine->held_piece.x != -1 && engine->held_piece.y != -1);
+  return (engine->held_piece_point.x != -1 && engine->held_piece_point.y != -1);
 }
 
 void closeEngine(struct Engine* engine) { engine->is_engine_running = 0; }
