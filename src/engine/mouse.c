@@ -19,8 +19,8 @@ void handleMousePressed(struct Engine* engine, const SDL_Event ev) {
 }
 
 void handleMouseReleased(struct Engine* engine, const SDL_Event ev) {
+  // basic piece moving
   if (ev.button.button == SDL_BUTTON_LEFT) {
-    // basic piece moving
     calculateValidMoves(&engine->game);
 
     const struct Piece held =
@@ -37,6 +37,7 @@ void handleMouseReleased(struct Engine* engine, const SDL_Event ev) {
         calculateValidMoves(&engine->game);
       }
     }
+
     engine->held_piece_point.x = -1;
     engine->held_piece_point.y = -1;
 

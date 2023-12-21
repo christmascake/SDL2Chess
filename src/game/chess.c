@@ -2,12 +2,21 @@
 
 #include <stdlib.h>
 
+#include "fen.h"
 #include "knight.h"
 #include "pawn.h"
+#include "rook.h"
 
 // PRIVATE
 
 // PUBLIC
+
+void forBoard(Chess* chess, void (*action)(int, int)) {
+  for (int i = 0; i < CHESSBOARD_HEIGHT; i++) {
+    for (int j = 0; j < CHESSBOARD_WIDTH; j++) {
+    }
+  }
+}
 
 int isValidPos(const struct Cord cord) {
   return !(cord.x > 7 | cord.x < 0 | cord.y > 7 | cord.y < 0);
@@ -60,15 +69,18 @@ void chessSetStartingPosition(struct Chess* chess) {
   chess->board[7][0].type = Rook;
   chess->board[0][7].type = Rook;
   chess->board[7][7].type = Rook;
+  FEN_setPosition(chess,
+                  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
 void calculateValidMoves(struct Chess* chess) {
-  for (size_t i = 0; i < BOARD_HEIGHT; i++) {
-    for (size_t j = 0; j < BOARD_WIDTH; j++) {
+  for (size_t i = 0; i < CHESSBOARD_HEIGHT; i++) {
+    for (size_t j = 0; j < CHESSBOARD_WIDTH; j++) {
       // set the valid moves for every piece to 0
       if (chess->board[i][j].type != Empty) {
         resetValidMoves(&chess->board[i][j]);
         resetValidAttacks(&chess->board[i][j]);
+        resetValidDefends(&chess->board[i][j]);
       }
 
       // determine piece
@@ -80,8 +92,33 @@ void calculateValidMoves(struct Chess* chess) {
         case Knight:
           calculateKnightMoves(chess, pos);
           break;
+        case Rook:
+          calculateRookMoves(chess, pos);
         default:
           break;
+      }
+    }
+  }
+}
+
+// we just copy movement and switch them appropriately
+void applyAD(struct Chess* chess, const struct Cord pos) {
+  int(*valid_moves)[8] = chess->board[pos.y][pos.x].valid_moves;
+  int(*valid_attacks)[8] = chess->board[pos.y][pos.x].valid_attacks;
+  int(*valid_defends)[8] = chess->board[pos.y][pos.x].valid_defends;
+
+  for (size_t i = 0; i < 8; i++) {
+    for (size_t j = 0; j < 8; j++) {
+      if (valid_moves[i][j]) {
+        if (chess->board[i][j].type != Empty) {
+          if (chess->board[i][j].side == chess->board[pos.y][pos.x].side) {
+            valid_moves[i][j] = 0;
+            valid_defends[i][j] = 1;
+          } else {
+            valid_moves[i][j] = 0;
+            valid_attacks[i][j] = 1;
+          }
+        }
       }
     }
   }
@@ -112,6 +149,16 @@ int isValidMove(const struct Chess* chess, const struct Cord held,
 
   // legal move
   return 1;
+}
+
+int isValidMoveTarget(const struct Chess* chess, const struct Cord target,
+                      const enum Side my_side) {
+  return chess->board[target.y][target.x].side != my_side |
+         chess->board[target.y][target.x].side == None;
+}
+
+int isInBounds(const struct Cord pos) {
+  return pos.x > -1 && pos.x < 8 && pos.y > -1 && pos.y < 8;
 }
 
 int placePiece(struct Chess* chess, const struct Piece piece,

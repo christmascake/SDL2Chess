@@ -8,9 +8,9 @@
 
 // PRIVATE
 
-void handleError(const char* msg) { SDL_Log(msg, SDL_GetError()); }
+static void handleError(const char* msg) { SDL_Log(msg, SDL_GetError()); }
 
-void createBoardTexture(struct Engine* engine) {
+static void createBoardTexture(struct Engine* engine) {
   SDL_SetRenderTarget(engine->renderer, engine->board_texture);
   SDL_SetRenderDrawColor(engine->renderer, 0, 0, 0, 0);
   SDL_RenderClear(engine->renderer);
@@ -35,7 +35,7 @@ void createBoardTexture(struct Engine* engine) {
   SDL_SetRenderTarget(engine->renderer, NULL);
 }
 
-void loadTextures(struct Engine* engine) {
+static void loadTextures(struct Engine* engine) {
   engine->pieces_texture = SDL_CreateTexture(
       engine->renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING,
       CHESS_PIECES_WIDTH, CHESS_PIECES_HEIGHT);
@@ -167,8 +167,8 @@ void updatePositionTexture(struct Engine* engine) {
   SDL_SetRenderDrawColor(engine->renderer, 0, 0, 0, 0);
   SDL_RenderClear(engine->renderer);
 
-  for (size_t i = 0; i < BOARD_HEIGHT; i++) {
-    for (size_t j = 0; j < BOARD_WIDTH; j++) {
+  for (size_t i = 0; i < CHESSBOARD_HEIGHT; i++) {
+    for (size_t j = 0; j < CHESSBOARD_WIDTH; j++) {
       // don't render a held piece
       if (engine->held_piece_point.y == i && engine->held_piece_point.x == j)
         continue;
@@ -243,6 +243,12 @@ void updateAttackedTexture(struct Engine* engine) {
                            [engine->held_piece_point.x]
                      .valid_moves[i][j]) {
         SDL_SetTextureColorMod(engine->target_texture, 0, 255, 0);
+        SDL_RenderCopy(engine->renderer, engine->target_texture, NULL, &pos);
+      } else if (engine->game
+                     .board[engine->held_piece_point.y]
+                           [engine->held_piece_point.x]
+                     .valid_defends[i][j]) {
+        SDL_SetTextureColorMod(engine->target_texture, 0, 0, 255);
         SDL_RenderCopy(engine->renderer, engine->target_texture, NULL, &pos);
       }
     }

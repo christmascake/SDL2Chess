@@ -5,14 +5,14 @@
 
 // PRIVATE
 
-void handleKeyboard(struct Engine* engine, const SDL_Event ev) {
+static void handleKeyboard(struct Engine* engine, const SDL_Event ev) {
   if (ev.type == SDL_KEYDOWN)
     handleKeyDown(engine, ev);
   else
     handleKeyUp(engine, ev);
 }
 
-void handleMouse(struct Engine* engine, const SDL_Event ev) {
+static void handleMouse(struct Engine* engine, const SDL_Event ev) {
   if (ev.type == SDL_MOUSEBUTTONDOWN)
     handleMousePressed(engine, ev);
   else

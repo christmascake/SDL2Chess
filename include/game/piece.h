@@ -1,18 +1,21 @@
 #ifndef SDL2CHESS_INCLUDE_GAME_PIECE_H_
 #define SDL2CHESS_INCLUDE_GAME_PIECE_H_
 
-enum Type { King, Queen, Bishop, Knight, Rook, Pawn, Empty };
-enum Side { White, Black, None };
+typedef enum Type { King, Queen, Bishop, Knight, Rook, Pawn, Empty } Type;
+typedef enum Side { White, Black, None } Side;
 
-struct Piece {
-  enum Type type;
-  enum Side side;
+typedef struct Piece {
+  Type type;
+  Side side;
 
   int valid_moves[8][8];
   int valid_attacks[8][8];
-};
+  int valid_defends[8][8];
+
+} Piece;
 
 void resetValidMoves(struct Piece* piece);
 void resetValidAttacks(struct Piece* piece);
+void resetValidDefends(struct Piece* piece);
 
 #endif

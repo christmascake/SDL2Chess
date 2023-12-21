@@ -2,6 +2,10 @@
 
 #include <stdlib.h>
 
+// PRVIATE
+
+// PUBLIC
+
 void resetValidMoves(struct Piece* piece) {
   for (size_t i = 0; i < 8; i++) {
     for (size_t j = 0; j < 8; j++) {
@@ -14,6 +18,14 @@ void resetValidAttacks(struct Piece* piece) {
   for (size_t i = 0; i < 8; i++) {
     for (size_t j = 0; j < 8; j++) {
       piece->valid_attacks[i][j] = 0;
+    }
+  }
+}
+
+void resetValidDefends(struct Piece* piece) {
+  for (size_t i = 0; i < 8; i++) {
+    for (size_t j = 0; j < 8; j++) {
+      piece->valid_defends[i][j] = 0;
     }
   }
 }

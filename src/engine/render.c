@@ -4,6 +4,10 @@
 
 #include "chess_pieces.h"
 
+// PRIVATE
+
+// PUBLIC
+
 void renderFrame(struct Engine* engine) {
   // set colour and clear
   SDL_SetRenderDrawColor(engine->renderer, 0, 55, 0, 255);

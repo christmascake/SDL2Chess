@@ -13,6 +13,7 @@ static void checkMovement(struct Chess* chess, const struct Cord pos,
     valid_moves[forward.y][forward.x] = 1;
 
     // check 2nd/7th rank special move
+    // not being careful can cause out of bounds crash
     // TODO: aint no way this is good code
     const struct Cord forward2 = {pos.x, pos.y + (offset * 2)};
     if (pos.y == 6 && offset == -1) {
@@ -37,18 +38,16 @@ static void checkAttack(struct Chess* chess, const struct Cord pos,
 
   const struct Piece* board = chess->board[pos.y + offset];
 
-  const enum Side my_side = chess->board[pos.y][pos.x].side;
-
   switch (pos.x) {
     case 0:
-      valid[east] = board[east].side != my_side && board[east].side != None;
+      valid[east] = board[east].type != Empty;
       break;
     case 7:
-      valid[west] = board[west].side != my_side && board[west].side != None;
+      valid[west] = board[west].type != Empty;
       break;
     default:
-      valid[east] = board[east].side != my_side && board[east].side != None;
-      valid[west] = board[west].side != my_side && board[west].side != None;
+      valid[east] = board[east].type != Empty;
+      valid[west] = board[west].type != Empty;
       break;
   }
 }
@@ -63,4 +62,5 @@ void calculatePawnMoves(struct Chess* chess, const struct Cord pos) {
 
   checkMovement(chess, pos, offset);
   checkAttack(chess, pos, offset);
+  applyAD(chess, pos);
 }
